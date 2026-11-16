@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mcp-verify · Zachary Kaplan</title>
+<meta name="description" content="A hallucination detector with a real benchmark behind it.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@400;700&display=swap">
+<link rel="stylesheet" href="/style.css">
+<script src="/main.js" defer></script>
+</head>
+<body>
+<div class="wrap">
+<header class="top"><a class="logo" href="/">Zachary Kaplan</a><nav aria-label="Main"><ul><li><a href="/work/" aria-current=page>Work</a></li><li><a href="/cv/">CV</a></li><li><a href="mailto:zkaplan1103@gmail.com">Email</a></li></ul></nav></header>
+<main>
+
+<section class="hero reveal">
+  <p class="eyebrow short">AI &amp; LLMs · 2026</p>
+  <h1 class="page">mcp-verify</h1>
+  <p class="lede prose" style="margin-top:.6em">A hallucination detector with a real benchmark behind it.</p>
+  <div class="links"><a class="btn" href="https://github.com/zkaplan1103/mcp-verify">GitHub ↗</a></div>
+</section>
+<section class="sec grid g-side reveal">
+  <p class="eyebrow">The problem</p>
+  <p class="lede prose">AI drafts sound confident even when they are wrong. Checking every claim by hand is slow. Most detectors never prove they work. I wanted one that shows its numbers.</p>
+</section>
+
+<section class="sec"><p class="eyebrow reveal">How it works</p><div class="grid g4"><div class="step reveal"><span class="n">01</span><b>Input</b><p>You give it a source of truth and a draft to check.</p></div><div class="step reveal"><span class="n">02</span><b>Check</b><p>Each claim in the draft is checked against the source.</p></div><div class="step reveal"><span class="n">03</span><b>Report</b><p>Unsupported claims come back as JSON with a reason, the source fact checked, a category and a severity.</p></div><div class="step reveal"><span class="n">04</span><b>Confirm</b><p>Reliability mode runs the check several times. It keeps the claims a majority agree on and moves unstable ones to an uncertain list.</p></div></div></section>
+<section class="sec reveal"><p class="eyebrow">Results</p><div class="nums"><div><b>97.9%</b><span>precision</span></div><div><b>99.1%</b><span>recall</span></div><div><b>106</b><span>labeled cases</span></div><div><b>4</b><span>domains plus a red team set</span></div></div></section>
+<section class="sec grid g-side reveal">
+  <p class="eyebrow">Details</p>
+  <div>
+    <div class="prose muted"><p>It runs as a Python library or as an MCP server with one tool. As a server it can borrow the host's model through MCP sampling. That means no API key and no extra cost.</p><p>The eval suite travels with the detector. It has a 15 type hallucination taxonomy and an adversarial red team set. It runs in CI so accuracy can't slip before a release.</p></div>
+    <p class="prose muted" style="margin-top:.8em">Every remaining failure is reviewed and written up in the benchmark doc. Next I want more domains and a bigger red team set.</p>
+    <div style="margin-top:24px"><ul class="tags quiet-tags"><li>Python</li><li>Claude API</li><li>MCP</li><li>pytest</li><li>GitHub Actions</li></ul></div>
+  </div>
+</section>
+<nav class="sec grid g2 pager" aria-label="More projects">
+  <a class="card lilac reveal" href="/work/space-race/"><span class="feature"><span class="meta">← Previous</span></span><h3>Space Race</h3></a>
+  <a class="card next blue reveal" href="/work/bizbrief/"><span class="feature"><span class="meta">Next →</span></span><h3>BizBrief</h3></a>
+</nav>
+<div class="sec reveal"><a class="cta" href="/work/">← All work</a></div>
+</main>
+<footer class="reveal">
+  <p class="eyebrow">Get in touch</p>
+  <a class="email" href="mailto:zkaplan1103@gmail.com">zkaplan1103@gmail.com</a>
+  <div class="foot"><a href="https://www.linkedin.com/in/zachary-kaplan-3bb703273">LinkedIn ↗</a><a href="https://github.com/zkaplan1103">GitHub ↗</a><a href="/cv/">CV</a><a href="/Zachary_Kaplan-Resume.pdf">Resume PDF</a></div>
+</footer>
+</div>
+</body>
+</html>
