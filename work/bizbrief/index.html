@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BizBrief · Zachary Kaplan</title>
+<meta name="description" content="Customer reviews in. A ranked weekly action brief out.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@400;700&display=swap">
+<link rel="stylesheet" href="/style.css">
+<script src="/main.js" defer></script>
+</head>
+<body>
+<div class="wrap">
+<header class="top"><a class="logo" href="/">Zachary Kaplan</a><nav aria-label="Main"><ul><li><a href="/work/" aria-current=page>Work</a></li><li><a href="/cv/">CV</a></li><li><a href="mailto:zkaplan1103@gmail.com">Email</a></li></ul></nav></header>
+<main>
+
+<section class="hero reveal">
+  <p class="eyebrow short">AI &amp; LLMs · 2026</p>
+  <h1 class="page">BizBrief</h1>
+  <p class="lede prose" style="margin-top:.6em">Customer reviews in. A ranked weekly action brief out.</p>
+  <div class="links"><a class="btn" href="https://zkaplan1103.github.io/Business-Brief/">Live demo ↗</a><a class="btn" href="https://github.com/zkaplan1103/Business-Brief">GitHub ↗</a></div>
+</section>
+<section class="sec grid g-side reveal">
+  <p class="eyebrow">The problem</p>
+  <p class="lede prose">Small business owners get a flood of reviews and no time to read them. They need to know what to fix this week. They also need the reviews that prove it.</p>
+</section>
+<section class="sec reveal"><img class="shot" src="/img/bizbrief.png" alt="BizBrief overview with a rating gauge, the weekly brief and the top action" loading="lazy"></section>
+<section class="sec"><p class="eyebrow reveal">How it works</p><div class="grid g4"><div class="step reveal"><span class="n">01</span><b>Ingest</b><p>Reviews are grouped by business and by week.</p></div><div class="step reveal"><span class="n">02</span><b>Route</b><p>A complexity score sends each batch to the cheapest Claude model that can handle it. Haiku, Sonnet or Opus.</p></div><div class="step reveal"><span class="n">03</span><b>Classify</b><p>Claude tags recurring themes and sentiment and keeps the review evidence for each one.</p></div><div class="step reveal"><span class="n">04</span><b>Brief</b><p>The top issues are ranked by impact. Each one gets a recommended action and a draft email.</p></div></div></section>
+<section class="sec reveal"><p class="eyebrow">Results</p><div class="nums"><div><b>72%</b><span>lower projected spend</span></div><div><b>36x</b><span>cheaper than Opus on the eval batch</span></div><div><b>14</b><span>red team findings, 12 fixed</span></div><div><b>3</b><span>Lambda stages</span></div></div></section>
+<section class="sec grid g-side reveal">
+  <p class="eyebrow">Details</p>
+  <div>
+    <div class="prose muted"><p>Routing and prompt caching bring the projected cost from about 99 cents to 28 cents per thousand reviews.</p><p>The serverless version is built with AWS SAM. Dropping a file in S3 fires an ingest, analyze and brief Lambda chain that writes to DynamoDB. Failed runs land in an SQS dead letter queue with an alarm. The API key lives in Secrets Manager. Every role only gets the actions its handler calls.</p></div>
+    <p class="prose muted" style="margin-top:.8em">The AWS stack is deployable but not deployed, since running it costs real money. The live demo uses simulated data for four fictional businesses.</p>
+    <div style="margin-top:24px"><ul class="tags quiet-tags"><li>Python</li><li>Claude API</li><li>FastAPI</li><li>React</li><li>AWS SAM</li><li>Lambda</li><li>DynamoDB</li><li>SQS</li></ul></div>
+  </div>
+</section>
+<nav class="sec grid g2 pager" aria-label="More projects">
+  <a class="card blue reveal" href="/work/mcp-verify/"><span class="feature"><span class="meta">← Previous</span></span><h3>mcp-verify</h3></a>
+  <a class="card next blue reveal" href="/work/policylens/"><span class="feature"><span class="meta">Next →</span></span><h3>PolicyLens</h3></a>
+</nav>
+<div class="sec reveal"><a class="cta" href="/work/">← All work</a></div>
+</main>
+<footer class="reveal">
+  <p class="eyebrow">Get in touch</p>
+  <a class="email" href="mailto:zkaplan1103@gmail.com">zkaplan1103@gmail.com</a>
+  <div class="foot"><a href="https://www.linkedin.com/in/zachary-kaplan-3bb703273">LinkedIn ↗</a><a href="https://github.com/zkaplan1103">GitHub ↗</a><a href="/cv/">CV</a><a href="/Zachary_Kaplan-Resume.pdf">Resume PDF</a></div>
+</footer>
+</div>
+</body>
+</html>

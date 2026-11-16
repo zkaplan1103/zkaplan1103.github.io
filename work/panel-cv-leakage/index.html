@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panel CV & Data Leakage · Zachary Kaplan</title>
+<meta name="description" content="A popular cross validation tool was quietly training on the future.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@400;700&display=swap">
+<link rel="stylesheet" href="/style.css">
+<script src="/main.js" defer></script>
+</head>
+<body>
+<div class="wrap">
+<header class="top"><a class="logo" href="/">Zachary Kaplan</a><nav aria-label="Main"><ul><li><a href="/work/" aria-current=page>Work</a></li><li><a href="/cv/">CV</a></li><li><a href="mailto:zkaplan1103@gmail.com">Email</a></li></ul></nav></header>
+<main>
+
+<section class="hero reveal">
+  <p class="eyebrow short">Data &amp; Research · 2025</p>
+  <h1 class="page">Panel CV &amp; Data Leakage</h1>
+  <p class="lede prose" style="margin-top:.6em">A popular cross validation tool was quietly training on the future.</p>
+  <div class="links"><a class="btn" href="https://github.com/zkaplan1103/panel-cv-leakage">GitHub ↗</a><a class="btn" href="https://github.com/zkaplan1103/panel-cv-leakage/blob/main/paper/panel-cv-strategies-paper.pdf">Paper ↗</a></div>
+</section>
+<section class="sec grid g-side reveal">
+  <p class="eyebrow">The problem</p>
+  <p class="lede prose">On panel data the split itself can leak answers. The same movie can land in train and test. The model can also train on dates after the test window. Either way the score looks better than it should.</p>
+</section>
+
+<section class="sec"><p class="eyebrow reveal">How it works</p><div class="grid g4"><div class="step reveal"><span class="n">01</span><b>Clean</b><p>Merged two sources into 254,062 daily rows for 3,400 movies and kept the group structure intact.</p></div><div class="step reveal"><span class="n">02</span><b>Audit</b><p>Asserted on every fold. GroupTimeSeriesSplit was training on 2020 data against a 2006 test window.</p></div><div class="step reveal"><span class="n">03</span><b>Fix</b><p>Wrote a splitter that sorts groups by date instead of by row order.</p></div><div class="step reveal"><span class="n">04</span><b>Benchmark</b><p>Tuned linear regression, decision trees and XGBoost across four validation strategies.</p></div></div></section>
+<section class="sec reveal"><p class="eyebrow">Results</p><div class="nums"><div><b>254,062</b><span>rows</span></div><div><b>3,400</b><span>movies</span></div><div><b>4</b><span>CV strategies</span></div><div><b>0</b><span>leaks in the fixed splitter</span></div></div></section>
+<section class="sec grid g-side reveal">
+  <p class="eyebrow">Details</p>
+  <div>
+    <div class="prose muted"><p>The community splitter orders groups by where they first appear in the array. It only works if the data was already sorted by date. Nothing warns you when it isn't.</p><p>Once both leaks are closed, test error rises and fold variance widens. That is the honest number. It's the one a forecast should use.</p></div>
+    <p class="prose muted" style="margin-top:.8em">This was my Econ 167 final at Pomona. The repo includes a leakage checker that works on any splitter.</p>
+    <div style="margin-top:24px"><ul class="tags quiet-tags"><li>Python</li><li>pandas</li><li>scikit-learn</li><li>XGBoost</li><li>Jupyter</li></ul></div>
+  </div>
+</section>
+<nav class="sec grid g2 pager" aria-label="More projects">
+  <a class="card blue reveal" href="/work/grant-navigator/"><span class="feature"><span class="meta">← Previous</span></span><h3>Grant Navigator</h3></a>
+  <a class="card next sage reveal" href="/work/air-labs-gtm/"><span class="feature"><span class="meta">Next →</span></span><h3>Air Labs GTM Pipeline</h3></a>
+</nav>
+<div class="sec reveal"><a class="cta" href="/work/">← All work</a></div>
+</main>
+<footer class="reveal">
+  <p class="eyebrow">Get in touch</p>
+  <a class="email" href="mailto:zkaplan1103@gmail.com">zkaplan1103@gmail.com</a>
+  <div class="foot"><a href="https://www.linkedin.com/in/zachary-kaplan-3bb703273">LinkedIn ↗</a><a href="https://github.com/zkaplan1103">GitHub ↗</a><a href="/cv/">CV</a><a href="/Zachary_Kaplan-Resume.pdf">Resume PDF</a></div>
+</footer>
+</div>
+</body>
+</html>
