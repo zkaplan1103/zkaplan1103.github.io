@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Grant Navigator · Zachary Kaplan</title>
-<meta name="description" content="Grant matches for nonprofits, with a check that blocks made up claims.">
+<meta name="description" content="Matches a nonprofit to grants and drafts the application text, with a check that blocks false claims.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,24 +20,15 @@
 <section class="hero reveal">
   <p class="eyebrow short">AI &amp; LLMs · 2026</p>
   <h1 class="page">Grant Navigator</h1>
-  <p class="lede prose" style="margin-top:.6em">Grant matches for nonprofits, with a check that blocks made up claims.</p>
+  <p class="lede prose" style="margin-top:.6em">Matches a nonprofit to grants and drafts the application text, with a check that blocks false claims.</p>
   <div class="links"><a class="btn" href="https://github.com/zkaplan1103/grant-finder">GitHub ↗</a></div>
 </section>
-<section class="sec grid g-side reveal">
-  <p class="eyebrow">The problem</p>
-  <p class="lede prose">Nonprofits chase funding across grants.gov, foundation sites and spreadsheets. It is slow work. One false eligibility claim can get an organization barred. The project started after the EPA cancelled Solar for All in August 2025 and solar nonprofits had to replace that money fast.</p>
-</section>
-
-<section class="sec"><p class="eyebrow reveal">How it works</p><div class="grid g4"><div class="step reveal"><span class="n">01</span><b>Profile</b><p>A nonprofit enters its funding focus and details.</p></div><div class="step reveal"><span class="n">02</span><b>Discover</b><p>Live grants.gov search runs alongside a vetted list of foundation and state sources.</p></div><div class="step reveal"><span class="n">03</span><b>Match</b><p>A Sonnet agent scores fit and ranks every result with a cited reason.</p></div><div class="step reveal"><span class="n">04</span><b>Verify</b><p>A drafter writes application text. An Opus verify agent sends back anything unsupported. Holdouts go to a person.</p></div></div></section>
-<section class="sec reveal"><p class="eyebrow">Results</p><div class="nums"><div><b>100%</b><span>precision</span></div><div><b>100%</b><span>recall</span></div><div><b>31</b><span>benchmark cases</span></div><div><b>3</b><span>agents, one bounded loop</span></div></div></section>
-<section class="sec grid g-side reveal">
-  <p class="eyebrow">Details</p>
-  <div>
-    <div class="prose muted"><p>Discovery is a tool, not an agent. Source trust is a config list vetted ahead of time. The agent loop is written by hand on the Anthropic SDK with no framework.</p><p>The verify step runs on the strongest model on purpose. A cheap model waves hallucinations through.</p></div>
-    <p class="prose muted" style="margin-top:.8em">The curated sources only cover solar and clean energy for now. Any other focus still gets full federal results.</p>
-    <div style="margin-top:24px"><ul class="tags quiet-tags"><li>Python</li><li>Claude API</li><li>FastAPI</li><li>React</li><li>TypeScript</li><li>SQLite</li></ul></div>
-  </div>
-</section>
+<section class="sec grid g-side reveal"><p class="eyebrow">The problem</p><p class="lede prose">Nonprofits find funding by digging through grants.gov, foundation sites and spreadsheets. It's slow. One false eligibility claim can get an organization barred. I started this after the EPA cancelled Solar for All in August 2025 and solar nonprofits had to replace that money quickly.</p></section>
+<section class="sec"><p class="eyebrow reveal">How it works</p><div class="grid g5"><div class="step reveal"><span class="n">01</span><b>Profile</b><p>The nonprofit describes itself and what it needs money for.</p></div><div class="step reveal"><span class="n">02</span><b>Search</b><p>A live grants.gov search runs next to a hand-vetted list of foundation and state programs.</p></div><div class="step reveal"><span class="n">03</span><b>Match</b><p>A Sonnet agent scores how well each grant fits and explains why.</p></div><div class="step reveal"><span class="n">04</span><b>Draft</b><p>Sonnet writes application boilerplate for the strong matches.</p></div><div class="step reveal"><span class="n">05</span><b>Verify</b><p>Opus checks every claim in the draft. Anything unsupported goes back for a rewrite or gets flagged for a person.</p></div></div></section>
+<section class="sec reveal"><p class="eyebrow">Verify benchmark</p><div class="nums"><div><b>100%</b><span>precision</span></div><div><b>100%</b><span>recall</span></div><div><b>31</b><span>test cases</span></div><div><b>3</b><span>difficulty tiers</span></div></div></section>
+<section class="sec grid g-side reveal"><p class="eyebrow">Choices I made</p><ul class="defs"><li><b>No framework</b><span>The agent loop is written by hand on the Anthropic SDK.</span></li><li><b>Search is a tool</b><span>Only the steps that need judgment are agents.</span></li><li><b>Best model verifies</b><span>A cheaper model let made up claims through.</span></li><li><b>Vetted sources</b><span>Which sites to trust is decided ahead of time in a config file.</span></li></ul></section>
+<section class="sec grid g-side reveal"><p class="eyebrow">Limits</p><div class="prose muted"><p>The hand-vetted sources only cover solar and clean energy for now. Any other focus still gets the full federal results.</p></div></section>
+<section class="sec grid g-side reveal"><p class="eyebrow">Built with</p><div><ul class="tags quiet-tags"><li>Python</li><li>Claude API</li><li>FastAPI</li><li>React</li><li>TypeScript</li><li>SQLite</li></ul></div></section>
 <nav class="sec grid g2 pager" aria-label="More projects">
   <a class="card blue reveal" href="/work/policylens/"><span class="feature"><span class="meta">← Previous</span></span><h3>PolicyLens</h3></a>
   <a class="card next sage reveal" href="/work/panel-cv-leakage/"><span class="feature"><span class="meta">Next →</span></span><h3>Panel CV &amp; Data Leakage</h3></a>

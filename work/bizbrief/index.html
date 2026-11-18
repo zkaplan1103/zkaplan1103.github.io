@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BizBrief · Zachary Kaplan</title>
-<meta name="description" content="Customer reviews in. A ranked weekly action brief out.">
+<meta name="description" content="Turns a week of customer reviews into a short list of what to fix.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,24 +20,17 @@
 <section class="hero reveal">
   <p class="eyebrow short">AI &amp; LLMs · 2026</p>
   <h1 class="page">BizBrief</h1>
-  <p class="lede prose" style="margin-top:.6em">Customer reviews in. A ranked weekly action brief out.</p>
+  <p class="lede prose" style="margin-top:.6em">Turns a week of customer reviews into a short list of what to fix.</p>
   <div class="links"><a class="btn" href="https://zkaplan1103.github.io/Business-Brief/">Live demo ↗</a><a class="btn" href="https://github.com/zkaplan1103/Business-Brief">GitHub ↗</a></div>
 </section>
-<section class="sec grid g-side reveal">
-  <p class="eyebrow">The problem</p>
-  <p class="lede prose">Small business owners get a flood of reviews and no time to read them. They need to know what to fix this week. They also need the reviews that prove it.</p>
-</section>
+<section class="sec grid g-side reveal"><p class="eyebrow">The problem</p><p class="lede prose">Small business owners get more reviews than they can read. The useful part is usually a few repeated complaints. I wanted something that pulls those out every week and backs each one with the reviews that prove it.</p></section>
 <section class="sec reveal"><img class="shot" src="/img/bizbrief.png" alt="BizBrief overview with a rating gauge, the weekly brief and the top action" loading="lazy"></section>
-<section class="sec"><p class="eyebrow reveal">How it works</p><div class="grid g4"><div class="step reveal"><span class="n">01</span><b>Ingest</b><p>Reviews are grouped by business and by week.</p></div><div class="step reveal"><span class="n">02</span><b>Route</b><p>A complexity score sends each batch to the cheapest Claude model that can handle it. Haiku, Sonnet or Opus.</p></div><div class="step reveal"><span class="n">03</span><b>Classify</b><p>Claude tags recurring themes and sentiment and keeps the review evidence for each one.</p></div><div class="step reveal"><span class="n">04</span><b>Brief</b><p>The top issues are ranked by impact. Each one gets a recommended action and a draft email.</p></div></div></section>
-<section class="sec reveal"><p class="eyebrow">Results</p><div class="nums"><div><b>72%</b><span>lower projected spend</span></div><div><b>36x</b><span>cheaper than Opus on the eval batch</span></div><div><b>14</b><span>red team findings, 12 fixed</span></div><div><b>3</b><span>Lambda stages</span></div></div></section>
-<section class="sec grid g-side reveal">
-  <p class="eyebrow">Details</p>
-  <div>
-    <div class="prose muted"><p>Routing and prompt caching bring the projected cost from about 99 cents to 28 cents per thousand reviews.</p><p>The serverless version is built with AWS SAM. Dropping a file in S3 fires an ingest, analyze and brief Lambda chain that writes to DynamoDB. Failed runs land in an SQS dead letter queue with an alarm. The API key lives in Secrets Manager. Every role only gets the actions its handler calls.</p></div>
-    <p class="prose muted" style="margin-top:.8em">The AWS stack is deployable but not deployed, since running it costs real money. The live demo uses simulated data for four fictional businesses.</p>
-    <div style="margin-top:24px"><ul class="tags quiet-tags"><li>Python</li><li>Claude API</li><li>FastAPI</li><li>React</li><li>AWS SAM</li><li>Lambda</li><li>DynamoDB</li><li>SQS</li></ul></div>
-  </div>
-</section>
+<section class="sec"><p class="eyebrow reveal">How it works</p><div class="grid g4"><div class="step reveal"><span class="n">01</span><b>Ingest</b><p>Reviews come in grouped by business and week.</p></div><div class="step reveal"><span class="n">02</span><b>Route</b><p>Each batch is scored on length, star spread and vocabulary. Then it goes to the cheapest model that can handle it.</p></div><div class="step reveal"><span class="n">03</span><b>Analyze</b><p>Claude tags themes and sentiment and keeps the reviews behind each one.</p></div><div class="step reveal"><span class="n">04</span><b>Brief</b><p>The top issues are ranked by impact. Each gets a recommended action and a draft reply.</p></div></div></section>
+<section class="sec grid g-side reveal"><p class="eyebrow">Picking models</p><div><div class="tablewrap"><table><thead><tr><th scope="col">Model</th><th scope="col">Cost per run</th><th scope="col">Label F1</th></tr></thead><tbody><tr><td>Haiku</td><td>$0.0045</td><td>0.60</td></tr><tr><td>Sonnet</td><td>$0.0169</td><td>0.18</td></tr><tr><td>Opus</td><td>$0.0900</td><td>0.50</td></tr></tbody></table></div><p class="muted prose" style="margin-top:20px">On the eval batch Haiku scored highest at the lowest cost. Sonnet found the right themes but worded its labels differently from the answer key. That's why most batches route to Haiku.</p></div></section>
+<section class="sec reveal"><p class="eyebrow">Cost per 1,000 reviews</p><div class="nums"><div><b>$0.99</b><span>Sonnet for everything</span></div><div><b>$0.34</b><span>with routing</span></div><div><b>$0.28</b><span>with routing and caching</span></div><div><b>72%</b><span>saved</span></div></div></section>
+<section class="sec grid g-side reveal"><p class="eyebrow">AWS version</p><div class="prose muted"><p>I also built an event-driven version on AWS with SAM. Uploading a file to S3 starts a chain of Lambda functions that ingest, analyze and write the brief to DynamoDB. Failed runs go to an SQS dead letter queue with an alarm.</p><p>It reuses the same routing, caching and retry code as the local version. It passes validation but isn't deployed, since running it costs money. The live demo uses simulated data for four made up businesses.</p></div></section>
+<section class="sec grid g-side reveal"><p class="eyebrow">Security</p><div class="prose muted"><p>I red-teamed the API before calling it done. That turned up 14 findings. I fixed 12, and the other 2 were low risk. The fixes included per-IP rate limits, API key auth with lockouts, path checks and a cap on request size.</p></div></section>
+<section class="sec grid g-side reveal"><p class="eyebrow">Built with</p><div><ul class="tags quiet-tags"><li>Python</li><li>Claude API</li><li>FastAPI</li><li>React</li><li>AWS SAM</li><li>Lambda</li><li>DynamoDB</li><li>SQS</li></ul></div></section>
 <nav class="sec grid g2 pager" aria-label="More projects">
   <a class="card blue reveal" href="/work/mcp-verify/"><span class="feature"><span class="meta">← Previous</span></span><h3>mcp-verify</h3></a>
   <a class="card next blue reveal" href="/work/policylens/"><span class="feature"><span class="meta">Next →</span></span><h3>PolicyLens</h3></a>
