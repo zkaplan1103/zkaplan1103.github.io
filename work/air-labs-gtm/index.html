@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Air Labs GTM Pipeline · Zachary Kaplan</title>
-<meta name="description" content="Messy inbound leads in. A clean Salesforce payload out.">
+<meta name="description" content="Cleans, enriches and scores a messy list of inbound leads for Salesforce.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,24 +20,15 @@
 <section class="hero reveal">
   <p class="eyebrow short">Data &amp; Research · 2026</p>
   <h1 class="page">Air Labs GTM Pipeline</h1>
-  <p class="lede prose" style="margin-top:.6em">Messy inbound leads in. A clean Salesforce payload out.</p>
+  <p class="lede prose" style="margin-top:.6em">Cleans, enriches and scores a messy list of inbound leads for Salesforce.</p>
   <div class="links"><a class="btn" href="https://github.com/zkaplan1103/AIR_LABS_GTM_CASE-STUDY">GitHub ↗</a></div>
 </section>
-<section class="sec grid g-side reveal">
-  <p class="eyebrow">The problem</p>
-  <p class="lede prose">Inbound lead lists are messy. Bad emails, duplicates, missing names and free text company fields. Sales can't prioritize until someone cleans and scores them.</p>
-</section>
-
-<section class="sec"><p class="eyebrow reveal">How it works</p><div class="grid g4"><div class="step reveal"><span class="n">01</span><b>Ingest</b><p>Parse the CSV and validate every row with Zod.</p></div><div class="step reveal"><span class="n">02</span><b>Normalize</b><p>Clean emails, phones, dates and companies. Drop bad emails and dedupe.</p></div><div class="step reveal"><span class="n">03</span><b>Enrich</b><p>Call a mock company data API with retries, backoff and a cache.</p></div><div class="step reveal"><span class="n">04</span><b>Score</b><p>26 JSON rules give each lead a score and a hot, warm or cold tier.</p></div></div></section>
-<section class="sec reveal"><p class="eyebrow">Results</p><div class="nums"><div><b>100</b><span>raw leads</span></div><div><b>89</b><span>after cleaning and dedup</span></div><div><b>15</b><span>hot leads</span></div><div><b>26</b><span>scoring rules</span></div></div></section>
-<section class="sec grid g-side reveal">
-  <p class="eyebrow">Details</p>
-  <div>
-    <div class="prose muted"><p>Scoring lives in a JSON file, so sales ops can change rules without touching code. Six runtime checks guard against silent data loss and stop the run if any one fails.</p><p>The output is a Salesforce Bulk API payload plus a flagged list for human review.</p></div>
-    <p class="prose muted" style="margin-top:.8em">The written case study rebuilds what a production go to market pipeline could look like. It also maps how this batch job would grow into one.</p>
-    <div style="margin-top:24px"><ul class="tags quiet-tags"><li>TypeScript</li><li>Node</li><li>Zod</li><li>Vitest</li><li>Salesforce Bulk API</li></ul></div>
-  </div>
-</section>
+<section class="sec grid g-side reveal"><p class="eyebrow">The brief</p><p class="lede prose">This started as a take-home for a GTM engineering role at Air. The task was to turn a messy CSV of inbound leads into something sales could use. I built the pipeline and wrote a case study on how it would run in production.</p></section>
+<section class="sec"><p class="eyebrow reveal">The pipeline</p><div class="grid g5"><div class="step reveal"><span class="n">01</span><b>Ingest</b><p>Parse the CSV and check every row against a Zod schema.</p></div><div class="step reveal"><span class="n">02</span><b>Normalize</b><p>Clean emails, phones, dates and company names. Drop bad emails and remove duplicates.</p></div><div class="step reveal"><span class="n">03</span><b>Enrich</b><p>Look up each company through a mock data API with retries and a cache.</p></div><div class="step reveal"><span class="n">04</span><b>Score</b><p>26 rules in a JSON file give each lead a score and a hot, warm or cold tier.</p></div><div class="step reveal"><span class="n">05</span><b>Output</b><p>Write a Salesforce Bulk API payload and a separate list for human review.</p></div></div></section>
+<section class="sec reveal"><p class="eyebrow">The run</p><div class="nums"><div><b>100</b><span>raw leads</span></div><div><b>89</b><span>after cleaning</span></div><div><b>15</b><span>hot</span></div><div><b>43</b><span>warm</span></div></div></section>
+<section class="sec grid g-side reveal"><p class="eyebrow">The case study</p><ul class="defs"><li><b>00</b><span>Who Air is and why I picked them.</span></li><li><b>01</b><span>What the data stands for and the question it answers.</span></li><li><b>02</b><span>A simulated version of the full go to market pipeline.</span></li><li><b>03</b><span>What the run showed and what follows from it.</span></li><li><b>04</b><span>What it would take to run this in production.</span></li></ul></section>
+<section class="sec grid g-side reveal"><p class="eyebrow">Notes</p><div class="prose muted"><p>Scoring rules live in JSON so sales ops can change them without touching code. Six checks run at the end and stop the job if any lead goes missing.</p></div></section>
+<section class="sec grid g-side reveal"><p class="eyebrow">Built with</p><div><ul class="tags quiet-tags"><li>TypeScript</li><li>Node</li><li>Zod</li><li>Vitest</li><li>Salesforce Bulk API</li></ul></div></section>
 <nav class="sec grid g2 pager" aria-label="More projects">
   <a class="card sage reveal" href="/work/panel-cv-leakage/"><span class="feature"><span class="meta">← Previous</span></span><h3>Panel CV &amp; Data Leakage</h3></a>
   <a class="card next blush reveal" href="/work/water-polo-playbook/"><span class="feature"><span class="meta">Next →</span></span><h3>Water Polo Playbook</h3></a>

@@ -1,151 +1,182 @@
-# One-off generator for the static site. Output is plain HTML committed to the repo.
+# Generator for the static site. Output is plain HTML committed to the repo.
 # Usage (from repo root): python3 tools/build.py .
-import sys, os
-from html import escape as e
+# Each project lists its own sections, so walkthroughs follow how the project actually went.
+import sys, os, re, glob
 
 OUT = sys.argv[1]
 EMAIL = "zkaplan1103@gmail.com"
 GH = "https://github.com/zkaplan1103/"
 LI = "https://www.linkedin.com/in/zachary-kaplan-3bb703273"
+ITCH = "https://zkaplan1103.itch.io/"
+
+TYPES = {"ai": ("AI &amp; LLMs", "blue"), "data": ("Data &amp; Research", "sage"),
+         "apps": ("Apps &amp; Full Stack", "blush"), "games": ("Games", "lilac")}
+
+# Section helpers. Each returns a tuple the renderer understands.
+def text(label, html, big=False): return ("text", label, html, big)
+def steps(label, items): return ("steps", label, items)
+def nums(label, items): return ("nums", label, items)
+def table(label, head, rows, note=""): return ("table", label, head, rows, note)
+def items(label, rows): return ("items", label, rows)
+def img(src, alt): return ("img", src, alt)
 
 P = [
  dict(slug="mcp-verify", title="mcp-verify", tag="Benchmarked hallucination detector", type="ai", year=2026,
-  claim="A hallucination detector with a real benchmark behind it.",
+  claim="Checks an AI draft against a source and flags every claim the source doesn't support.",
   stat=("97.9%", "precision on 106 labeled cases"),
   links=[("GitHub", GH+"mcp-verify")],
-  problem="AI drafts sound confident even when they are wrong. Checking every claim by hand is slow. Most detectors never prove they work. I wanted one that shows its numbers.",
-  steps=[("Input", "You give it a source of truth and a draft to check."),
-         ("Check", "Each claim in the draft is checked against the source."),
-         ("Report", "Unsupported claims come back as JSON with a reason, the source fact checked, a category and a severity."),
-         ("Confirm", "Reliability mode runs the check several times. It keeps the claims a majority agree on and moves unstable ones to an uncertain list.")],
-  stats=[("97.9%", "precision"), ("99.1%", "recall"), ("106", "labeled cases"), ("4", "domains plus a red team set")],
-  body="<p>It runs as a Python library or as an MCP server with one tool. As a server it can borrow the host's model through MCP sampling. That means no API key and no extra cost.</p><p>The eval suite travels with the detector. It has a 15 type hallucination taxonomy and an adversarial red team set. It runs in CI so accuracy can't slip before a release.</p>",
   stack=["Python", "Claude API", "MCP", "pytest", "GitHub Actions"],
-  next="Every remaining failure is reviewed and written up in the benchmark doc. Next I want more domains and a bigger red team set."),
+  sections=[
+   text("The problem", "Language models write confident text that is sometimes wrong. If that text goes to a customer, someone has to check every claim. I wanted a checker I could trust, so I built one and measured how often it's right.", big=True),
+   text("What it does", "<p>You pass in a source of truth and a draft. It returns each claim the source doesn't back up. Every flag comes with a reason, the fact it checked, a category and a severity.</p><p>It works as a Python library or as an MCP server with one tool. As a server it can use the host's own model through MCP sampling, so it runs without an API key. A reliability mode runs the check several times and only keeps the claims most runs agree on.</p>"),
+   nums("Results", [("97.9%", "precision"), ("99.1%", "recall"), ("98.5%", "F1"), ("106", "labeled cases")]),
+   items("The benchmark", [("106 cases", "Labeled drafts across 4 domains."),
+                           ("Red team set", "Adversarial cases written to slip past the checker."),
+                           ("15 types", "A taxonomy of the ways a draft can be wrong."),
+                           ("3 runs", "Scores are averaged over three runs with 95% confidence intervals."),
+                           ("CI gate", "The suite runs on every change so accuracy can't quietly drop.")]),
+   text("Notes", "Every miss that's left is written up in the benchmark doc along with why it happened."),
+  ]),
  dict(slug="bizbrief", title="BizBrief", tag="Serverless review intelligence pipeline", type="ai", year=2026,
-  claim="Customer reviews in. A ranked weekly action brief out.",
+  claim="Turns a week of customer reviews into a short list of what to fix.",
   stat=("72%", "lower projected model spend"),
   links=[("Live demo", "https://zkaplan1103.github.io/Business-Brief/"), ("GitHub", GH+"Business-Brief")],
-  img=("bizbrief.png", "BizBrief overview with a rating gauge, the weekly brief and the top action"),
-  problem="Small business owners get a flood of reviews and no time to read them. They need to know what to fix this week. They also need the reviews that prove it.",
-  steps=[("Ingest", "Reviews are grouped by business and by week."),
-         ("Route", "A complexity score sends each batch to the cheapest Claude model that can handle it. Haiku, Sonnet or Opus."),
-         ("Classify", "Claude tags recurring themes and sentiment and keeps the review evidence for each one."),
-         ("Brief", "The top issues are ranked by impact. Each one gets a recommended action and a draft email.")],
-  stats=[("72%", "lower projected spend"), ("36x", "cheaper than Opus on the eval batch"), ("14", "red team findings, 12 fixed"), ("3", "Lambda stages")],
-  body="<p>Routing and prompt caching bring the projected cost from about 99 cents to 28 cents per thousand reviews.</p><p>The serverless version is built with AWS SAM. Dropping a file in S3 fires an ingest, analyze and brief Lambda chain that writes to DynamoDB. Failed runs land in an SQS dead letter queue with an alarm. The API key lives in Secrets Manager. Every role only gets the actions its handler calls.</p>",
   stack=["Python", "Claude API", "FastAPI", "React", "AWS SAM", "Lambda", "DynamoDB", "SQS"],
-  next="The AWS stack is deployable but not deployed, since running it costs real money. The live demo uses simulated data for four fictional businesses."),
+  sections=[
+   text("The problem", "Small business owners get more reviews than they can read. The useful part is usually a few repeated complaints. I wanted something that pulls those out every week and backs each one with the reviews that prove it.", big=True),
+   img("bizbrief.png", "BizBrief overview with a rating gauge, the weekly brief and the top action"),
+   steps("How it works", [("Ingest", "Reviews come in grouped by business and week."),
+                          ("Route", "Each batch is scored on length, star spread and vocabulary. Then it goes to the cheapest model that can handle it."),
+                          ("Analyze", "Claude tags themes and sentiment and keeps the reviews behind each one."),
+                          ("Brief", "The top issues are ranked by impact. Each gets a recommended action and a draft reply.")]),
+   table("Picking models", ["Model", "Cost per run", "Label F1"],
+         [["Haiku", "$0.0045", "0.60"], ["Sonnet", "$0.0169", "0.18"], ["Opus", "$0.0900", "0.50"]],
+         "On the eval batch Haiku scored highest at the lowest cost. Sonnet found the right themes but worded its labels differently from the answer key. That's why most batches route to Haiku."),
+   nums("Cost per 1,000 reviews", [("$0.99", "Sonnet for everything"), ("$0.34", "with routing"), ("$0.28", "with routing and caching"), ("72%", "saved")]),
+   text("AWS version", "<p>I also built an event-driven version on AWS with SAM. Uploading a file to S3 starts a chain of Lambda functions that ingest, analyze and write the brief to DynamoDB. Failed runs go to an SQS dead letter queue with an alarm.</p><p>It reuses the same routing, caching and retry code as the local version. It passes validation but isn't deployed, since running it costs money. The live demo uses simulated data for four made up businesses.</p>"),
+   text("Security", "I red-teamed the API before calling it done. That turned up 14 findings. I fixed 12, and the other 2 were low risk. The fixes included per-IP rate limits, API key auth with lockouts, path checks and a cap on request size."),
+  ]),
  dict(slug="policylens", title="PolicyLens", tag="Privacy policy Q&amp;A with citations", type="ai", year=2026,
-  claim="Ask a privacy policy a question. Get the clause that answers it.",
+  claim="Answers questions about a privacy policy and cites the exact clause it used.",
   stat=("2,393", "clauses across 115 real policies"),
   links=[("GitHub", GH+"RAG_PRIVACY")],
-  problem="Privacy policies are long and written by lawyers. People want a straight answer to a normal question. Does this app share my data with advertisers?",
-  steps=[("Ingest", "115 real policies from the OPP-115 corpus are split into 2,393 labeled clauses."),
-         ("Retrieve", "Hybrid vector and full text search plus a reranker return the top five clauses."),
-         ("Answer", "Claude answers from those clauses only and cites each one it used."),
-         ("Abstain", "If no clause clears the confidence floor, the app says the policy doesn't cover it.")],
-  stats=[("115", "policies"), ("2,393", "clauses"), ("167", "golden Q&amp;A items"), ("157", "unit tests")],
-  body="<p>Every citation traces back to a real clause ID and real text from the policy. The model is told not to use outside knowledge.</p><p>The production path runs on Supabase pgvector behind API Gateway and Lambda, set up with Terraform. CI runs faithfulness and abstention checks and blocks a change if either drops below its threshold.</p>",
   stack=["Python", "Claude API", "RAG", "pgvector", "Supabase", "Terraform", "AWS Lambda", "Ragas"],
-  next="Two separate abstention paths keep it honest. One stops weak matches before the model runs. The other lets the model refuse when the clauses don't support an answer."),
+  sections=[
+   text("The problem", "Nobody reads privacy policies. They're long and written by lawyers. I wanted to ask a normal question, like whether an app shares my data with advertisers, and get a short answer I could check.", big=True),
+   steps("How it works", [("Ingest", "115 real policies from the OPP-115 corpus are split into 2,393 labeled clauses."),
+                          ("Retrieve", "The question is matched against that policy with vector and keyword search, then reranked. The top five clauses come back."),
+                          ("Answer", "Claude answers from those five clauses only and cites each one.")]),
+   text("When it says no", "<p>The hardest part was getting it to admit when a policy doesn't cover something. There are two checks. If no clause scores high enough, it stops before calling the model. If the model reads the clauses and they don't support an answer, it says so instead of guessing.</p>"),
+   nums("Evaluation", [("167", "golden questions"), ("30", "of them unanswerable on purpose"), ("0.80", "faithfulness floor in CI"), ("157", "unit tests")]),
+   text("Production", "The production version runs on Supabase pgvector behind API Gateway and Lambda, set up with Terraform. CI runs the eval and blocks a change if faithfulness or abstention accuracy drops below its floor."),
+  ]),
  dict(slug="grant-navigator", title="Grant Navigator", tag="Multi-agent grant matching", type="ai", year=2026,
-  claim="Grant matches for nonprofits, with a check that blocks made up claims.",
+  claim="Matches a nonprofit to grants and drafts the application text, with a check that blocks false claims.",
   stat=("100%", "precision and recall on 31 cases"),
   links=[("GitHub", GH+"grant-finder")],
-  problem="Nonprofits chase funding across grants.gov, foundation sites and spreadsheets. It is slow work. One false eligibility claim can get an organization barred. The project started after the EPA cancelled Solar for All in August 2025 and solar nonprofits had to replace that money fast.",
-  steps=[("Profile", "A nonprofit enters its funding focus and details."),
-         ("Discover", "Live grants.gov search runs alongside a vetted list of foundation and state sources."),
-         ("Match", "A Sonnet agent scores fit and ranks every result with a cited reason."),
-         ("Verify", "A drafter writes application text. An Opus verify agent sends back anything unsupported. Holdouts go to a person.")],
-  stats=[("100%", "precision"), ("100%", "recall"), ("31", "benchmark cases"), ("3", "agents, one bounded loop")],
-  body="<p>Discovery is a tool, not an agent. Source trust is a config list vetted ahead of time. The agent loop is written by hand on the Anthropic SDK with no framework.</p><p>The verify step runs on the strongest model on purpose. A cheap model waves hallucinations through.</p>",
   stack=["Python", "Claude API", "FastAPI", "React", "TypeScript", "SQLite"],
-  next="The curated sources only cover solar and clean energy for now. Any other focus still gets full federal results."),
+  sections=[
+   text("The problem", "Nonprofits find funding by digging through grants.gov, foundation sites and spreadsheets. It's slow. One false eligibility claim can get an organization barred. I started this after the EPA cancelled Solar for All in August 2025 and solar nonprofits had to replace that money quickly.", big=True),
+   steps("How it works", [("Profile", "The nonprofit describes itself and what it needs money for."),
+                          ("Search", "A live grants.gov search runs next to a hand-vetted list of foundation and state programs."),
+                          ("Match", "A Sonnet agent scores how well each grant fits and explains why."),
+                          ("Draft", "Sonnet writes application boilerplate for the strong matches."),
+                          ("Verify", "Opus checks every claim in the draft. Anything unsupported goes back for a rewrite or gets flagged for a person.")]),
+   nums("Verify benchmark", [("100%", "precision"), ("100%", "recall"), ("31", "test cases"), ("3", "difficulty tiers")]),
+   items("Choices I made", [("No framework", "The agent loop is written by hand on the Anthropic SDK."),
+                            ("Search is a tool", "Only the steps that need judgment are agents."),
+                            ("Best model verifies", "A cheaper model let made up claims through."),
+                            ("Vetted sources", "Which sites to trust is decided ahead of time in a config file.")]),
+   text("Limits", "The hand-vetted sources only cover solar and clean energy for now. Any other focus still gets the full federal results."),
+  ]),
  dict(slug="panel-cv-leakage", title="Panel CV &amp; Data Leakage", tag="Econometrics and ML research", type="data", year=2025,
-  claim="A popular cross validation tool was quietly training on the future.",
+  claim="I found a popular cross validation splitter training models on future data.",
   stat=("254,062", "rows of daily box office data"),
   links=[("GitHub", GH+"panel-cv-leakage"), ("Paper", GH+"panel-cv-leakage/blob/main/paper/panel-cv-strategies-paper.pdf")],
-  problem="On panel data the split itself can leak answers. The same movie can land in train and test. The model can also train on dates after the test window. Either way the score looks better than it should.",
-  steps=[("Clean", "Merged two sources into 254,062 daily rows for 3,400 movies and kept the group structure intact."),
-         ("Audit", "Asserted on every fold. GroupTimeSeriesSplit was training on 2020 data against a 2006 test window."),
-         ("Fix", "Wrote a splitter that sorts groups by date instead of by row order."),
-         ("Benchmark", "Tuned linear regression, decision trees and XGBoost across four validation strategies.")],
-  stats=[("254,062", "rows"), ("3,400", "movies"), ("4", "CV strategies"), ("0", "leaks in the fixed splitter")],
-  body="<p>The community splitter orders groups by where they first appear in the array. It only works if the data was already sorted by date. Nothing warns you when it isn't.</p><p>Once both leaks are closed, test error rises and fold variance widens. That is the honest number. It's the one a forecast should use.</p>",
   stack=["Python", "pandas", "scikit-learn", "XGBoost", "Jupyter"],
-  next="This was my Econ 167 final at Pomona. The repo includes a leakage checker that works on any splitter."),
+  sections=[
+   text("The question", "For my Econ 167 final I wanted to see how much the choice of cross validation changes results on panel data. The data was daily box office numbers for 3,400 movies from 1999 to 2020.", big=True),
+   text("What I found", "<p>The community GroupTimeSeriesSplit sorts groups by where they first show up in the data, not by date. If the data isn't already sorted by date, it trains on the future and still reports a good score.</p><p>I caught it because I checked every fold. One fold trained on data through 2020 and tested on 2006.</p>"),
+   text("The fix", "I wrote a version that takes the dates directly and sorts by them. I also wrote a checker that tests any splitter for both kinds of leakage."),
+   table("Results", ["CV strategy", "What leaks", "XGBoost MSE"],
+         [["KFold", "Same movie and future dates", "0.824"], ["GroupKFold", "Future dates", "0.748"],
+          ["GroupTimeSeriesSplit", "Some future dates", "0.798"], ["My fixed splitter", "Nothing", "0.775"]],
+         "The leaky splits looked more stable than they should. Once both leaks are closed the error rises and varies more between folds. That number is less flattering, but it's the honest one to use for a forecast."),
+   nums("The data", [("254,062", "rows"), ("3,400", "movies"), ("3", "models"), ("4", "CV strategies")]),
+  ]),
  dict(slug="air-labs-gtm", title="Air Labs GTM Pipeline", tag="Lead processing case study", type="data", year=2026,
-  claim="Messy inbound leads in. A clean Salesforce payload out.",
+  claim="Cleans, enriches and scores a messy list of inbound leads for Salesforce.",
   stat=("89", "clean leads scored from 100 raw rows"),
   links=[("GitHub", GH+"AIR_LABS_GTM_CASE-STUDY")],
-  problem="Inbound lead lists are messy. Bad emails, duplicates, missing names and free text company fields. Sales can't prioritize until someone cleans and scores them.",
-  steps=[("Ingest", "Parse the CSV and validate every row with Zod."),
-         ("Normalize", "Clean emails, phones, dates and companies. Drop bad emails and dedupe."),
-         ("Enrich", "Call a mock company data API with retries, backoff and a cache."),
-         ("Score", "26 JSON rules give each lead a score and a hot, warm or cold tier.")],
-  stats=[("100", "raw leads"), ("89", "after cleaning and dedup"), ("15", "hot leads"), ("26", "scoring rules")],
-  body="<p>Scoring lives in a JSON file, so sales ops can change rules without touching code. Six runtime checks guard against silent data loss and stop the run if any one fails.</p><p>The output is a Salesforce Bulk API payload plus a flagged list for human review.</p>",
   stack=["TypeScript", "Node", "Zod", "Vitest", "Salesforce Bulk API"],
-  next="The written case study rebuilds what a production go to market pipeline could look like. It also maps how this batch job would grow into one."),
+  sections=[
+   text("The brief", "This started as a take-home for a GTM engineering role at Air. The task was to turn a messy CSV of inbound leads into something sales could use. I built the pipeline and wrote a case study on how it would run in production.", big=True),
+   steps("The pipeline", [("Ingest", "Parse the CSV and check every row against a Zod schema."),
+                          ("Normalize", "Clean emails, phones, dates and company names. Drop bad emails and remove duplicates."),
+                          ("Enrich", "Look up each company through a mock data API with retries and a cache."),
+                          ("Score", "26 rules in a JSON file give each lead a score and a hot, warm or cold tier."),
+                          ("Output", "Write a Salesforce Bulk API payload and a separate list for human review.")]),
+   nums("The run", [("100", "raw leads"), ("89", "after cleaning"), ("15", "hot"), ("43", "warm")]),
+   items("The case study", [("00", "Who Air is and why I picked them."),
+                            ("01", "What the data stands for and the question it answers."),
+                            ("02", "A simulated version of the full go to market pipeline."),
+                            ("03", "What the run showed and what follows from it."),
+                            ("04", "What it would take to run this in production.")]),
+   text("Notes", "Scoring rules live in JSON so sales ops can change them without touching code. Six checks run at the end and stop the job if any lead goes missing."),
+  ]),
  dict(slug="water-polo-playbook", title="Water Polo Playbook", tag="Coaching app for animated plays", type="apps", year=2026,
-  claim="Plays that move, built for the team I coach.",
+  claim="An app I built for the team I coach to draw plays and watch them move.",
   stat=("3", "platforms. iPad, phone and web"),
   links=[("Live app", "https://zkaplan1103.github.io/water-polo-playbook/"), ("GitHub", GH+"water-polo-playbook")],
-  img=("water-polo-playbook.png", "Playbook editor showing a 6on5 play with every move drawn"),
-  problem="Our plays lived on a whiteboard. Players saw them once and forgot them. I wanted one place where the team could watch every play move step by step.",
-  steps=[("Set up", "Pick a half or full pool board drawn to scale and a formation like 6v6 or 6on5."),
-         ("Build", "Move players slide by slide. Add pass lanes, shot lines and notes."),
-         ("Play", "The app animates every cap and the ball between slides."),
-         ("Present", "Present mode loops the play fullscreen on a TV or an iPad.")],
-  stats=[("3", "platforms"), ("4", "sample plays built in"), ("0", "accounts or servers"), (".pptx", "export with speaker notes")],
-  body="<p>Plays save on the device. There is no account or server. A play exports to PowerPoint with editable shapes and speaker notes, so a coach can drop it into a team meeting.</p><p>I use it with the boys team at The Hill School. We build new plays with the head coach and run them in practice from the app.</p>",
   stack=["Expo", "React Native", "TypeScript", "SVG", "GitHub Actions"],
-  next="Folders, undo, light and dark themes and drag and drop are all in. Next is sharing a play by link."),
+  sections=[
+   text("Why I built it", "Our plays lived on a whiteboard. Players saw them once in practice and forgot them. I wanted a place where the team could watch every play move step by step, on whatever device they had.", big=True),
+   img("water-polo-playbook.png", "Playbook editor showing a 6on5 play with every move drawn"),
+   items("What it does", [("Boards to scale", "Half and full pool with the 2, 5 and 6 meter lines."),
+                          ("Formations", "6v6, 6on5, 5on6 and counterattack setups built in."),
+                          ("Slides", "Move players slide by slide and the app animates between them."),
+                          ("Present mode", "Loops a play fullscreen on a TV or an iPad."),
+                          ("Lines and notes", "Pass lanes, shot lines and notes on any slide."),
+                          ("PowerPoint export", "Editable shapes with speaker notes.")]),
+   text("How we use it", "We build new plays with the head coach and walk the team through them in present mode. Everything saves on the device, so there's no account to set up."),
+  ]),
  dict(slug="terrapin-rewards", title="Terrapin Rewards", tag="Job. Multi-tenant loyalty platform", type="apps", year=2025,
-  claim="One loyalty platform for a group of local businesses.",
+  claim="A loyalty platform I built for a group of local businesses.",
   stat=("11", "months leading full stack development"),
   links=[("Live site", "https://terrapinrewards.netlify.app")],
-  problem="Local businesses wanted a loyalty program without each one running its own system. Customers wanted one place to check in and collect points.",
-  steps=[("Check in", "Customers scan a QR code at the counter."),
-         ("Earn", "Points build toward rewards that each business sets."),
-         ("Isolate", "Row level security in PostgreSQL means each business only sees its own data."),
-         ("Track", "Real time dashboards on the Square API show engagement and retention.")],
-  stats=[("11", "months"), ("1", "platform, many businesses"), ("RLS", "per business data isolation"), ("Live", "Square analytics")],
-  body="<p>I led full stack development from January to November 2025. I met regularly with the business owners and turned their requests into shipped features.</p>",
   stack=["React 19", "TypeScript", "Supabase", "PostgreSQL", "Square API"],
-  next="This was client work, so the code is private. The live site is public."),
-
+  sections=[
+   text("The job", "I led full stack development at Terrapin Rewards from January to November 2025. The goal was one loyalty system that several local businesses could share. Customers check in with a QR code and earn points toward rewards each business sets.", big=True),
+   items("What I built", [("Shared platform", "One React and Supabase app that serves every business."),
+                          ("Data isolation", "PostgreSQL row-level security so each business only sees its own customers."),
+                          ("Analytics", "Real time dashboards on the Square API for engagement and retention."),
+                          ("Custom features", "Built from requests that came out of regular meetings with the owners.")]),
+   text("Notes", "This was client work, so the code is private. The live site is public."),
+  ]),
  dict(slug="cat-kingdom", title="Cat Kingdom", tag="2D platformer in Unity", type="games", year=2024,
-  claim="Four cat heroes. Swap between them to clear each level.",
+  claim="A 2D platformer where you switch between four cats to get through each level.",
   stat=("4", "playable cats, each with its own move"),
-  links=[("Play on itch.io", "https://zkaplan1103.itch.io/cat-kingdom")],
-  problem="Our game development midterm at DIS asked for a full 2D platformer. We wanted the puzzle to be picking the right character, not just jumping well.",
-  steps=[("Story", "A story intro sets up the kingdom before the first level."),
-         ("Swap", "Switch between four cats mid level. One rolls, one attacks, one double jumps and one flies."),
-         ("Clear", "Three levels built so each section needs the right cat at the right time."),
-         ("Finish", "A final scene closes out the story.")],
-  stats=[("4", "playable cats"), ("3", "levels"), ("2", "person team"), ("0", "downloads needed")],
-  body="<p>I built it with a teammate in Unity and C#. We wrote the character swap, movement and level logic ourselves. The art comes from third party sprite packs.</p>",
+  links=[("Play on itch.io", ITCH+"cat-kingdom")],
   stack=["Unity", "C#", "WebGL"],
-  next="I rebuilt it for WebGL in 2026 so it plays in the browser with no download."),
+  sections=[
+   text("About the game", "I made it with a teammate for our game development midterm at DIS. There are three levels with a story intro and a final scene.", big=True),
+   text("How it plays", "You can swap cats at any point in a level. Each one has a single move. One rolls, one attacks, one double jumps and one flies."),
+   text("Making it", "We wrote it in C# in Unity. The art comes from third party sprite packs. In 2026 I rebuilt it for WebGL so it plays in the browser."),
+  ]),
  dict(slug="space-race", title="Space Race", tag="Gravity flipping platformer in Unity", type="games", year=2024,
-  claim="A platformer where the world turns around you.",
+  claim="A 2D platformer where the world rotates around you.",
   stat=("10", "levels with portals and a level select"),
-  links=[("Play on itch.io", "https://zkaplan1103.itch.io/space-race"), ("GitHub", "https://github.com/GAMEDEVMIDTERM01/GameDevFinal")],
-  img=("space-race.png", "Space Race title screen with a rover and a dotted path to a planet"),
-  problem="For our final we wanted one mechanic that changes how every level reads. We picked rotation. Hit certain points and the whole world turns, so a wall can become the floor.",
-  steps=[("Run", "Move and jump through a 2D level."),
-         ("Flip", "Hit a trigger and the world rotates around the player."),
-         ("Portal", "Portals send you across the map."),
-         ("Select", "A level select lets you jump into any of the ten levels.")],
-  stats=[("10", "levels"), ("1", "core mechanic"), ("2", "person team"), ("0", "downloads needed")],
-  body="<p>I built it with a teammate in Unity and C#. Every level is designed around the rotation, so the same room plays differently once it turns.</p>",
+  links=[("Play on itch.io", ITCH+"space-race"), ("GitHub", "https://github.com/GAMEDEVMIDTERM01/GameDevFinal")],
   stack=["Unity", "C#", "WebGL"],
-  next="This was our final project at DIS. I rebuilt it for WebGL in 2026 so it plays in the browser."),
+  sections=[
+   text("About the game", "I made it with a teammate as our game development final at DIS. When you hit certain points the whole level turns, so a wall can become the floor.", big=True),
+   img("space-race.png", "Space Race title screen with a rover and a dotted path to a planet"),
+   items("What's in it", [("10 levels", "Play them in order or pick one from the level select."),
+                          ("Rotation", "Hit a trigger and the world turns around the player."),
+                          ("Portals", "Step in one and come out somewhere else on the map.")]),
+   text("Making it", "We wrote it in C# in Unity. I rebuilt it for WebGL in 2026 so it plays in the browser. The source is on GitHub."),
+  ]),
 ]
-
-TYPES = {"ai": ("AI &amp; LLMs", "blue"), "data": ("Data &amp; Research", "sage"), "apps": ("Apps &amp; Full Stack", "blush"), "games": ("Games", "lilac")}
 
 def head(title, desc):
     return f"""<!doctype html>
@@ -166,8 +197,8 @@ def head(title, desc):
 """
 
 def nav(cur):
-    items = [("Work", "/work/"), ("CV", "/cv/"), ("Email", f"mailto:{EMAIL}")]
-    lis = "".join(f'<li><a href="{h}"{" aria-current=page" if n == cur else ""}>{n}</a></li>' for n, h in items)
+    links = [("Work", "/work/"), ("CV", "/cv/"), ("Email", f"mailto:{EMAIL}")]
+    lis = "".join(f'<li><a href="{h}"{" aria-current=page" if n == cur else ""}>{n}</a></li>' for n, h in links)
     return f'<div class="wrap">\n<header class="top"><a class="logo" href="/">Zachary Kaplan</a><nav aria-label="Main"><ul>{lis}</ul></nav></header>\n<main>\n'
 
 def foot():
@@ -187,14 +218,43 @@ def tags(xs, cls=""): return f'<ul class="tags {cls}">' + "".join(f"<li>{x}</li>
 def card(p, i, cls=""):
     label, color = TYPES[p["type"]]
     n, cap = p["stat"]
+    go = "Play and read more" if p["type"] == "games" else "Read walkthrough"
     return f"""<a class="card feature {color} reveal {cls}" href="/work/{p['slug']}/" data-type="{p['type']}">
   <span class="meta">{i:02d} · {label}</span>
   <h3>{p['title']}</h3>
   <p>{p['tag']}</p>
   <div><div class="stat">{n}</div><p>{cap}</p></div>
   {tags(p['stack'][:4])}
-  <span class="go">Read walkthrough</span>
+  <span class="go">{go}</span>
 </a>"""
+
+def section(s):
+    kind = s[0]
+    if kind == "text":
+        _, label, html, big = s
+        body = f'<p class="lede prose">{html}</p>' if big else f'<div class="prose muted">{html if html.startswith("<") else "<p>" + html + "</p>"}</div>'
+        return f'<section class="sec grid g-side reveal"><p class="eyebrow">{label}</p>{body}</section>'
+    if kind == "steps":
+        _, label, xs = s
+        cells = "".join(f'<div class="step reveal"><span class="n">0{j+1}</span><b>{t}</b><p>{d}</p></div>' for j, (t, d) in enumerate(xs))
+        return f'<section class="sec"><p class="eyebrow reveal">{label}</p><div class="grid g{len(xs)}">{cells}</div></section>'
+    if kind == "nums":
+        _, label, xs = s
+        return f'<section class="sec reveal"><p class="eyebrow">{label}</p><div class="nums">' + "".join(f"<div><b>{n}</b><span>{c}</span></div>" for n, c in xs) + "</div></section>"
+    if kind == "table":
+        _, label, hd, rows, note = s
+        th = "".join(f'<th scope="col">{h}</th>' for h in hd)
+        trs = "".join("<tr>" + "".join(f"<td>{c}</td>" for c in r) + "</tr>" for r in rows)
+        n = f'<p class="muted prose" style="margin-top:20px">{note}</p>' if note else ""
+        return f'<section class="sec grid g-side reveal"><p class="eyebrow">{label}</p><div><div class="tablewrap"><table><thead><tr>{th}</tr></thead><tbody>{trs}</tbody></table></div>{n}</div></section>'
+    if kind == "items":
+        _, label, xs = s
+        lis = "".join(f"<li><b>{t}</b><span>{d}</span></li>" for t, d in xs)
+        return f'<section class="sec grid g-side reveal"><p class="eyebrow">{label}</p><ul class="defs">{lis}</ul></section>'
+    if kind == "img":
+        _, src, alt = s
+        return f'<section class="sec reveal"><img class="shot" src="/img/{src}" alt="{alt}" loading="lazy"></section>'
+    raise ValueError(kind)
 
 def write(path, html):
     full = os.path.join(OUT, path)
@@ -203,19 +263,19 @@ def write(path, html):
 
 # Home. Staggered layout.
 sel = [p for p in P if p["slug"] in ("mcp-verify", "bizbrief")]
-home = head("Zachary Kaplan", "Zachary Kaplan builds software that solves real problems.") + nav("") + f"""
+home = head("Zachary Kaplan", "Zachary Kaplan is a backend developer interested in using data to make business decisions.") + nav("") + f"""
 <section class="hero stair">
   <div style="grid-column:1/-1" class="reveal">
-    <p class="eyebrow short">Software engineer</p>
+    <p class="eyebrow short">Backend developer</p>
     <h1 class="name"><span>Zachary</span><span>Kaplan</span></h1>
   </div>
   <div class="hero-bio reveal">
-    <p class="lede">I build software that solves real problems.</p>
-    <p class="muted" style="margin-top:1em">Backend systems, mobile apps, data pipelines and AI tools. I like messy problems. I find the part that matters, build the fix and make sure it holds up.</p>
+    <p class="lede">I'm most interested in using data to make business decisions.</p>
+    <p class="muted" style="margin-top:1em">I graduated from Pomona with a degree in Computer Science and a minor in Economics. Right now I work on the backend at Umee Social. The problems I care about most involve user engagement, revenue and marketing.</p>
   </div>
   <div class="hero-now reveal">
     <p class="eyebrow">Now</p>
-    <p><b>Lead backend developer</b> at <a href="https://www.umee.social">Umee Social</a></p>
+    <p><b>Backend developer</b> at <a href="https://www.umee.social">Umee Social</a></p>
     <p><b>Assistant water polo coach</b> at The Hill School</p>
   </div>
 </section>
@@ -229,23 +289,21 @@ home = head("Zachary Kaplan", "Zachary Kaplan builds software that solves real p
   </div>
 </section>
 
-<section class="sec">
-  <p class="eyebrow reveal">About</p>
-  <div class="stair">
-    <div class="item about-1 reveal"><span class="n">01</span><h3>Water polo</h3><p class="muted">I played four years at Pomona-Pitzer and won a Division III national title my first year. Now I coach the boys team at The Hill School, where I went to high school.</p></div>
-    <div class="item about-2 reveal"><span class="n">02</span><h3>Building</h3><p class="muted">I like building things I want to exist. The playbook app started because our plays lived on a whiteboard. I've also made <a href="/work/?type=games">games in Unity and C#</a>.</p></div>
-    <div class="item about-3 reveal"><span class="n">03</span><h3>Tradeoffs</h3><p class="muted">The economics side shows up in how I build. I think about cost per run and whether the data actually supports the claim.</p></div>
-  </div>
-</section>
-
-<section class="sec">
-  <p class="eyebrow reveal">Education</p>
-  <div class="stair">
-    <div class="edu-a reveal">
-      <h2>Pomona<br>College</h2>
-      <p class="lede muted" style="margin-top:.6em">B.A. Computer Science. Minor in Economics.</p>
+<section class="sec stair">
+  <div class="about reveal">
+    <p class="eyebrow">About</p>
+    <p class="lede">I want to work where engineering and analytics meet.</p>
+    <div class="muted" style="margin-top:1em">
+      <p>That could be backend, data or product work. The questions I like most are about why users stay, what they pay for and which marketing works.</p>
+      <p>I'm looking for a team with experienced people I can learn from. I want to take on more responsibility as I grow.</p>
+      <p>Outside of work I coach water polo at The Hill School. I also build things on the side, like a <a href="/work/water-polo-playbook/">playbook app</a> for the team and a couple of <a href="/work/?type=games">Unity games</a>.</p>
     </div>
-    <ul class="facts edu-b reveal">
+  </div>
+  <div class="edu reveal">
+    <p class="eyebrow">Education</p>
+    <h2>Pomona<br>College</h2>
+    <p class="muted" style="margin-top:.8em">B.A. Computer Science. Minor in Economics.</p>
+    <ul class="facts" style="margin-top:24px">
       <li><b>3.78</b><span>GPA</span></li>
       <li><b>4x</b><span>Academic All-American</span></li>
       <li><b>2021</b><span>D3 water polo national champion</span></li>
@@ -259,11 +317,11 @@ write("index.html", home)
 chips = '<button type="button" data-filter="all" aria-pressed="true">All <span class="count">' + str(len(P)) + '</span></button>' + "".join(
     f'<button type="button" data-filter="{k}" aria-pressed="false">{lab} <span class="count">{sum(p["type"] == k for p in P)}</span></button>'
     for k, (lab, _) in TYPES.items())
-work = head("Work · Zachary Kaplan", "Projects by Zachary Kaplan. AI systems, data research and apps.") + nav("Work") + f"""
+work = head("Work · Zachary Kaplan", "Projects by Zachary Kaplan. AI systems, data research, apps and games.") + nav("Work") + f"""
 <section class="hero reveal">
   <p class="eyebrow short">{len(P)} projects</p>
   <h1 class="page">Work</h1>
-  <p class="lede muted prose" style="margin-top:.5em">Everything here is finished and linked. Pick a type or open any card for the full walkthrough.</p>
+  <p class="lede muted prose" style="margin-top:.5em">Everything here is finished and linked. Pick a type or open a card for the details.</p>
 </section>
 <div class="filters" role="group" aria-label="Filter projects by type">{chips}</div>
 <section class="grid g2" aria-label="Projects">
@@ -272,14 +330,11 @@ work = head("Work · Zachary Kaplan", "Projects by Zachary Kaplan. AI systems, d
 """ + foot()
 write("work/index.html", work)
 
-# Walkthroughs. Neat.
+# Walkthroughs. Sections differ per project.
 for i, p in enumerate(P):
     label, color = TYPES[p["type"]]
     prev_p, next_p = P[i - 1], P[(i + 1) % len(P)]
     links = "".join(f'<a class="btn" href="{h}">{n} ↗</a>' for n, h in p["links"])
-    steps = "".join(f'<div class="step reveal"><span class="n">0{j+1}</span><b>{t}</b><p>{d}</p></div>' for j, (t, d) in enumerate(p["steps"]))
-    nums = "".join(f'<div><b>{n}</b><span>{c}</span></div>' for n, c in p["stats"])
-    img = f'<section class="sec reveal"><img class="shot" src="/img/{p["img"][0]}" alt="{p["img"][1]}" loading="lazy"></section>' if "img" in p else ""
     page = head(f"{p['title'].replace('&amp;', '&')} · Zachary Kaplan", p["claim"]) + nav("Work") + f"""
 <section class="hero reveal">
   <p class="eyebrow short">{label} · {p['year']}</p>
@@ -287,21 +342,8 @@ for i, p in enumerate(P):
   <p class="lede prose" style="margin-top:.6em">{p['claim']}</p>
   <div class="links">{links}</div>
 </section>
-<section class="sec grid g-side reveal">
-  <p class="eyebrow">The problem</p>
-  <p class="lede prose">{p['problem']}</p>
-</section>
-{img}
-<section class="sec"><p class="eyebrow reveal">How it works</p><div class="grid g4">{steps}</div></section>
-<section class="sec reveal"><p class="eyebrow">Results</p><div class="nums">{nums}</div></section>
-<section class="sec grid g-side reveal">
-  <p class="eyebrow">Details</p>
-  <div>
-    <div class="prose muted">{p['body']}</div>
-    <p class="prose muted" style="margin-top:.8em">{p['next']}</p>
-    <div style="margin-top:24px">{tags(p['stack'], 'quiet-tags')}</div>
-  </div>
-</section>
+{chr(10).join(section(s) for s in p['sections'])}
+<section class="sec grid g-side reveal"><p class="eyebrow">Built with</p><div>{tags(p['stack'], 'quiet-tags')}</div></section>
 <nav class="sec grid g2 pager" aria-label="More projects">
   <a class="card {TYPES[prev_p['type']][1]} reveal" href="/work/{prev_p['slug']}/"><span class="feature"><span class="meta">← Previous</span></span><h3>{prev_p['title']}</h3></a>
   <a class="card next {TYPES[next_p['type']][1]} reveal" href="/work/{next_p['slug']}/"><span class="feature"><span class="meta">Next →</span></span><h3>{next_p['title']}</h3></a>
@@ -315,16 +357,16 @@ def role(org, url, title, dates, bullets):
     o = f'<a href="{url}">{org}</a>' if url else org
     return f'<article class="role"><header><h3>{o}</h3><span class="when">{dates}</span></header><p class="title">{title}</p><ul>' + "".join(f"<li>{b}</li>" for b in bullets) + "</ul></article>"
 
-cv = head("CV · Zachary Kaplan", "CV for Zachary Kaplan, software engineer.") + nav("CV") + f"""
+cv = head("CV · Zachary Kaplan", "CV for Zachary Kaplan, backend developer.") + nav("CV") + f"""
 <section class="hero reveal">
   <p class="eyebrow short">Curriculum vitae</p>
   <h1 class="page">Zachary Kaplan</h1>
-  <p class="lede muted" style="margin-top:.6em">Software engineer. I build backend systems, apps, data pipelines and AI tools.</p>
+  <p class="lede muted" style="margin-top:.6em">Backend developer. Interested in work that mixes engineering and analytics.</p>
   <div class="links no-print"><a class="btn" href="/Zachary_Kaplan-Resume.pdf" download>Download PDF ↓</a><a class="btn alt" href="mailto:{EMAIL}">Email ↗</a><a class="btn alt" href="{LI}">LinkedIn ↗</a></div>
 </section>
 <section class="sec grid g-side reveal"><p class="eyebrow">Experience</p><div>
 {role("Umee Social", "https://www.umee.social", "Backend Developer", "Oct 2026 to now", [
-  "Lead backend developer improving the admin panel and community health board.",
+  "Improve the admin panel and community health board on the backend.",
   "Build frontend features for the Umee mobile app in Flutter.",
   "Work across AWS services to support and extend the app's backend."])}
 {role("The Hill School", "", "Assistant Boys Water Polo Coach", "Aug 2025 to now", [
@@ -360,11 +402,12 @@ write("404.html", head("Not found · Zachary Kaplan", "Page not found.") + nav("
 
 write("favicon.svg", '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#1B1A18"/><text x="32" y="43" text-anchor="middle" font-family="Century Gothic,Futura,sans-serif" font-weight="700" font-size="28" fill="#C9D9EA">ZK</text></svg>')
 
-# ponytail: self-check. Every internal link resolves to a generated file.
-import re, glob
+# ponytail: self-check. Every internal link resolves, no private repo link, no dashes in copy.
 for f in glob.glob(os.path.join(OUT, "**/*.html"), recursive=True):
-    for href in re.findall(r'href="(/[^"#?]*)', open(f).read()):
+    src = open(f).read()
+    for href in re.findall(r'href="(/[^"#?]*)', src):
         target = os.path.join(OUT, href.lstrip("/"))
         assert os.path.exists(target if not href.endswith("/") else target + "index.html"), (f, href)
-    assert "water-polo-playbook-pomona" not in open(f).read(), f
-print("built", len(glob.glob(os.path.join(OUT, '**/*.html'), recursive=True)), "pages, internal links OK")
+    assert "water-polo-playbook-pomona" not in src, f
+    assert not re.search("[–—]", src), (f, "em or en dash in copy")
+print("built", len(glob.glob(os.path.join(OUT, '**/*.html'), recursive=True)), "pages, checks OK")
