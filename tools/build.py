@@ -291,11 +291,10 @@ home = head("Zachary Kaplan", "Zachary Kaplan is a backend developer interested 
 <section class="sec stair about-edu reveal">
   <div class="about">
     <p class="eyebrow">About</p>
-    <p class="lede">I want to work where engineering and analytics meet.</p>
+    <p class="lede">I do my best work where engineering and analytics meet.</p>
     <div class="muted" style="margin-top:1em">
-      <p>That could be backend, data or product work. The questions I like most are about why users stay, what they pay for and which marketing works.</p>
-      <p>I'm looking for a team with experienced people I can learn from. I want to take on more responsibility as I grow.</p>
-      <p>Outside of work I coach water polo at The Hill School. I also build things on the side, like a <a href="/work/water-polo-playbook/">playbook app</a> for the team and a couple of <a href="/work/?type=games">Unity games</a>.</p>
+      <p>That can be in backend, data or product, especially on problems around user engagement, revenue and marketing.</p>
+      <p>I learn quickly from experienced people, and I like taking on more responsibility as I grow.</p>
     </div>
   </div>
   <div class="edu">
