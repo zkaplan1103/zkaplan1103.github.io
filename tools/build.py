@@ -270,8 +270,7 @@ home = head("Zachary Kaplan", "Zachary Kaplan is a backend developer interested 
     <h1 class="name"><span>Zachary</span><span>Kaplan</span></h1>
   </div>
   <div class="hero-bio reveal">
-    <p class="lede">I'm most interested in using data to make business decisions.</p>
-    <p class="muted" style="margin-top:1em">I graduated from Pomona with a degree in Computer Science and a minor in Economics. Right now I work on the backend at Umee Social. The problems I care about most involve user engagement, revenue and marketing.</p>
+    <p class="muted">I'm most interested in using data to make business decisions. I build backend systems and data pipelines, along with AI tools and full stack apps.</p>
   </div>
   <div class="hero-now reveal">
     <p class="eyebrow">Now</p>
@@ -289,8 +288,8 @@ home = head("Zachary Kaplan", "Zachary Kaplan is a backend developer interested 
   </div>
 </section>
 
-<section class="sec stair">
-  <div class="about reveal">
+<section class="sec stair about-edu reveal">
+  <div class="about">
     <p class="eyebrow">About</p>
     <p class="lede">I want to work where engineering and analytics meet.</p>
     <div class="muted" style="margin-top:1em">
@@ -299,7 +298,7 @@ home = head("Zachary Kaplan", "Zachary Kaplan is a backend developer interested 
       <p>Outside of work I coach water polo at The Hill School. I also build things on the side, like a <a href="/work/water-polo-playbook/">playbook app</a> for the team and a couple of <a href="/work/?type=games">Unity games</a>.</p>
     </div>
   </div>
-  <div class="edu reveal">
+  <div class="edu">
     <p class="eyebrow">Education</p>
     <h2>Pomona<br>College</h2>
     <p class="muted" style="margin-top:.8em">B.A. Computer Science. Minor in Economics.</p>
